@@ -114,8 +114,8 @@ function update_auction_listing(listing, records, reference)
 		local historical_value = history.value(selected_item.key)
 		local stack_size = stack_size_slider:GetValue()
 		for _, record in records[selected_item.key] or T.empty do
-			local price_color = undercut(record, stack_size_slider:GetValue(), listing == 'bid') < reference and aux.color.red
-			local price = record.unit_price * (listing == 'bid' and record.stack_size / stack_size_slider:GetValue() or 1)
+			local price_color = undercut(record, stack_size_slider:GetValue()) < reference and aux.color.red
+			local price = record.unit_price * (listing == 'wtf' and record.stack_size / stack_size_slider:GetValue() or 1)
 			tinsert(rows, T.map(
 				'cols', T.list(
 				T.map('value', record.own and aux.color.green(record.count) or record.count),
@@ -183,7 +183,7 @@ function price_update()
     if selected_item then
         local historical_value = history.value(selected_item.key)
         if get_bid_selection() or get_buyout_selection() then
-	        set_unit_start_price(undercut(get_bid_selection() or get_buyout_selection(), stack_size_slider:GetValue(), get_bid_selection()))
+	        set_unit_start_price(undercut(get_bid_selection() or get_buyout_selection(), stack_size_slider:GetValue()))
 	        unit_start_price_input:SetText(money.to_string(get_unit_start_price(), true, nil, nil, true))
         end
         if get_buyout_selection() then
