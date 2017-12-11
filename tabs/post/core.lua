@@ -281,14 +281,18 @@ function update_item_configuration()
         stack_size_slider:Hide()
         stack_count_slider:Hide()
         deposit:Hide()
+        vendor_unit_price:Show()
+        total_buyout_proceeds:Show()
         duration_dropdown:Hide()
         hide_checkbox:Hide()
     else
-		unit_start_price_input:Show()
+	unit_start_price_input:Show()
         unit_buyout_price_input:Show()
         stack_size_slider:Show()
         stack_count_slider:Show()
         deposit:Show()
+        vendor_unit_price:Show()
+        total_buyout_proceeds:Show()
         duration_dropdown:Show()
         hide_checkbox:Show()
 
@@ -307,12 +311,16 @@ function update_item_configuration()
         stack_size_slider.editbox:SetNumber(stack_size_slider:GetValue())
         stack_count_slider.editbox:SetNumber(stack_count_slider:GetValue())
 
+	unit_buyout_price = get_unit_buyout_price()
         do
             local deposit_factor = UnitFactionGroup'npc' and .05 or .25
             local duration_factor = UIDropDownMenu_GetSelectedValue(duration_dropdown) / 120
             local stack_size, stack_count = selected_item.max_charges and 1 or stack_size_slider:GetValue(), stack_count_slider:GetValue()
             local amount = floor(selected_item.unit_vendor_price * deposit_factor * stack_size) * stack_count * duration_factor
+            local bo_proceeds = floor(unit_buyout_price * stack_size * stack_count) - amount
             deposit:SetText('Deposit: ' .. money.to_string(amount, nil, nil, aux.color.text.enabled))
+            vendor_unit_price:SetText('Item Vendor Price: ' .. money.to_string(selected_item.unit_vendor_price, nil, nil, aux.color.text.enabled))
+            total_buyout_proceeds:SetText('Max Proceeds: ' .. money.to_string(bo_proceeds, nil, nil, aux.color.text.enabled))
         end
 
         refresh_button:Enable()

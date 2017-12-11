@@ -271,6 +271,11 @@ do
     unit_start_price_input = editbox
 end
 do
+    local label = gui.label(frame.parameters, gui.font_size.medium)
+    label:SetPoint('RIGHT', hide_checkbox, 'LEFT', -20, 0)
+    vendor_unit_price = label
+end
+do
     local editbox = gui.editbox(frame.parameters)
     editbox:SetPoint('TOPRIGHT', unit_start_price_input, 'BOTTOMRIGHT', 0, -19)
     editbox:SetWidth(180)
@@ -309,6 +314,11 @@ do
 	local label = gui.label(frame.parameters, gui.font_size.medium)
 	label:SetPoint('TOPLEFT', unit_buyout_price_input, 'BOTTOMLEFT', 0, -24)
 	deposit = label
+end
+do
+	local label = gui.label(frame.parameters, gui.font_size.medium)
+	label:SetPoint('RIGHT', deposit, 'LEFT', -20, 0)
+	total_buyout_proceeds = label
 end
 
 function aux.handle.LOAD()
