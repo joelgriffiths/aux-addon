@@ -2,6 +2,7 @@ module 'aux.util.info'
 
 local T = require 'T'
 local aux = require 'aux'
+local info = require 'aux.util.info'
 
 CreateFrame('GameTooltip', 'AuxTooltip', nil, 'GameTooltipTemplate')
 AuxTooltip:SetScript('OnTooltipAddMoney', function()
@@ -107,6 +108,7 @@ function M.auction(index, query_type)
 
         local name, texture, count, quality, usable, level, start_price, min_increment, buyout_price, high_bid, high_bidder, owner, sale_status = GetAuctionItemInfo(query_type, index)
 
+	local vendor_price = info.merchant_info(item_id) or 0
     	local duration = GetAuctionItemTimeLeft(query_type, index)
         local tooltip, tooltip_money = tooltip('auction', query_type, index)
         local max_charges = max_item_charges(item_id)
@@ -143,6 +145,7 @@ function M.auction(index, query_type)
             'blizzard_bid', blizzard_bid,
             'bid_price', bid_price,
             'buyout_price', buyout_price,
+            'vendor_price', vendor_price,
             'unit_blizzard_bid', blizzard_bid / aux_quantity,
             'unit_bid_price', bid_price / aux_quantity,
             'unit_buyout_price', buyout_price / aux_quantity,

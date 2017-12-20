@@ -66,7 +66,8 @@ end
 M.search_columns = {
     {
         title = 'Item',
-        width = .35,
+        --width = .35,
+        width = .25,
         init = item_column_init,
         fill = item_column_fill,
         cmp = function(record_a, record_b, desc)
@@ -134,7 +135,8 @@ M.search_columns = {
     },
     {
         title = 'Seller',
-        width = .13,
+        --width = .13,
+        width = .10,
         align = 'CENTER',
         fill = function(cell, record)
             cell.text:SetText(info.is_player(record.owner) and (aux.color.yellow(record.owner)) or (record.owner or '?'))
@@ -152,8 +154,41 @@ M.search_columns = {
         end,
     },
     {
+		-- TODO Can't sort. Can't display BO profit
+        title = {'Vendor\n(bid profit)', 'Vendor\n(bo profit)'},
+        width = .110,
+        align = 'RIGHT',
+        isPrice = true,
+        fill = function(cell, record)
+            local price_color
+            if record.high_bidder then
+	            price_color = aux.color.green
+            elseif record.high_bid ~= 0 then
+	            price_color = aux.color.orange
+            end
+            local price
+			--aux.print(record.vendor_price .. ":" .. record.high_bid)
+            vendor_price = record.vendor_price
+            if record.high_bidder then
+                profit_bid = math.max(vendor_price - record.high_bid, 0)
+		    else
+                profit_bid = math.max(vendor_price - record.bid_price, 0)
+			end
+            profit_bo  = math.max(vendor_price - record.buyout_price, 0)
+            cell.text:SetText(money.to_string(profit_bid, true, false, price_color))
+        end,
+        cmp = function(record_a, record_b, desc)
+            local profit_bid
+            profit_bid = math.max(record_a.vendor_price - record_a.high_bid, 0)
+
+            local profit_bo
+            profit_bo = math.max(record_b.vendor_price - record_b.buyout_price, 0)
+            return sort_util.compare(profit_bid, profit_bo, desc)
+        end,
+    },
+    {
         title = {'Auction Bid\n(per item)', 'Auction Bid\n(per stack)'},
-        width = .125,
+        width = .110,
         align = 'RIGHT',
         isPrice = true,
         fill = function(cell, record)
@@ -201,7 +236,8 @@ M.search_columns = {
     },
     {
         title = {'Auction Buyout\n(per item)', 'Auction Buyout\n(per stack)'},
-        width = .125,
+        --width = .125,
+        width = .110,
         align = 'RIGHT',
         isPrice = true,
         fill = function(cell, record)
@@ -219,7 +255,8 @@ M.search_columns = {
     },
     {
         title = '% Hist.\nValue',
-        width = .08,
+        --width = .08,
+        width = .06,
         align = 'CENTER',
         fill = function(cell, record)
             local pct, bidPct = record_percentage(record)

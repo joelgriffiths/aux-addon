@@ -135,6 +135,19 @@ function update_start_stop()
 	end
 end
 
+function dump(o)
+   if type(o) == 'table' then
+      local s = '{ '
+      for k,v in pairs(o) do
+         if type(k) ~= 'number' then k = '"'..k..'"' end
+         s = s .. '['..k..'] = ' .. dump(v) .. ','
+      end
+      return s .. '} '
+   else
+      return tostring(o)
+   end
+end
+
 function start_real_time_scan(query, search, continuation)
 
 	local ignore_page
@@ -145,6 +158,11 @@ function start_real_time_scan(query, search, continuation)
 		ignore_page = not tonumber(continuation)
 	end
 
+	--aux.print("Type: " .. type(query))
+	--aux.print("First Page: " .. query.blizzard_query.first_page)
+	--aux.print("Last Page: " .. query.blizzard_query.last_page)
+	--aux.print("Ignore Page: ", tostring(ignore_page))
+	--aux.print("QUERY:", dump(query))
 	local next_page
 	local new_records = T.acquire()
 	search_scan_id = scan.start{
@@ -203,6 +221,91 @@ function start_real_time_scan(query, search, continuation)
 		end,
 	}
 end
+
+function start_rt_query(queries, continuation)
+	local current_query, current_page, total_queries, start_query, start_page
+
+	local search = current_search()
+
+	total_queries = getn(queries)
+
+	if continuation then
+		start_query, start_page = unpack(continuation)
+		for i = 1, start_query - 1 do
+			tremove(queries, 1)
+		end
+		queries[1].blizzard_query.first_page = (queries[1].blizzard_query.first_page or 0) + start_page - 1
+		search.table:SetSelectedRecord()
+	else
+		start_query, start_page = 1, 1
+	end
+
+
+	search_scan_id = scan.start{
+		type = 'list',
+		queries = queries,
+		auto_buy_validator = search.auto_buy_validator,
+		on_scan_start = function()
+			search.status_bar:update_status(0, 0)
+			if continuation then
+				search.status_bar:set_text('Resuming scan...')
+			else
+				search.status_bar:set_text('Scanning auctions...')
+			end
+		end,
+		on_page_loaded = function(_, total_scan_pages)
+			current_page = current_page + 1
+			total_scan_pages = total_scan_pages + (start_page - 1)
+			total_scan_pages = max(total_scan_pages, 1)
+			current_page = min(current_page, total_scan_pages)
+			search.status_bar:update_status((current_query - 1) / getn(queries), current_page / total_scan_pages)
+			search.status_bar:set_text(format('Scanning %d / %d (Page %d / %d)', current_query, total_queries, current_page, total_scan_pages))
+		end,
+		on_page_scanned = function()
+			search.table:SetDatabase()
+		end,
+		on_start_query = function(query)
+			current_query = current_query and current_query + 1 or start_query
+			current_page = current_page and 0 or start_page - 1
+		end,
+		on_auction = function(auction_record, ctrl)
+			if getn(search.records) < 2000 then
+				tinsert(search.records, auction_record)
+				if getn(search.records) == 2000 then
+					StaticPopup_Show('AUX_SEARCH_TABLE_FULL')
+				end
+			end
+		end,
+		on_complete = function()
+			search.status_bar:update_status(1, 1)
+			search.status_bar:set_text('Scan complete')
+
+			if current_search() == search and frame.results:IsVisible() and getn(search.records) == 0 then
+				set_subtab(SAVED)
+			end
+
+			search.active = false
+			update_start_stop()
+		end,
+		on_abort = function()
+			search.status_bar:update_status(1, 1)
+			search.status_bar:set_text('Scan paused')
+
+			if current_query then
+				search.continuation = {current_query, current_page + 1}
+			else
+				search.continuation = {start_query, start_page}
+			end
+			if current_search() == search then
+				update_continuation()
+			end
+
+			search.active = false
+			update_start_stop()
+		end,
+	}
+end
+
 
 function start_search(queries, continuation)
 	local current_query, current_page, total_queries, start_query, start_page
