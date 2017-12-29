@@ -316,10 +316,12 @@ function update_item_configuration()
             local deposit_factor = UnitFactionGroup'npc' and .05 or .25
             local duration_factor = UIDropDownMenu_GetSelectedValue(duration_dropdown) / 120
             local stack_size, stack_count = selected_item.max_charges and 1 or stack_size_slider:GetValue(), stack_count_slider:GetValue()
-            local amount = floor(selected_item.unit_vendor_price * deposit_factor * stack_size) * stack_count * duration_factor
-            local bo_proceeds = floor(unit_buyout_price * stack_size * stack_count) - amount
-            deposit:SetText('Deposit: ' .. money.to_string(amount, nil, nil, aux.color.text.enabled))
-            vendor_unit_price:SetText('Item Vendor Price: ' .. money.to_string(selected_item.unit_vendor_price, nil, nil, aux.color.text.enabled))
+            local deposit_amt = floor(selected_item.unit_vendor_price * stack_count * stack_size * deposit_factor * duration_factor)
+            local deposit_amt_per_item = floor(deposit_amt / (stack_count * stack_size))
+            local bo_proceeds = floor(unit_buyout_price * stack_size * stack_count) - floor(unit_buyout_price * stack_size * stack_count * deposit_factor)
+            deposit:SetText('Deposit: ' .. money.to_string(deposit_amt_per_item, nil, nil, aux.color.text.enabled) .. ' / ' .. money.to_string(deposit_amt, nil, nil, aux.color.text.enabled))
+            local total_vendor_price = selected_item.unit_vendor_price * stack_size * stack_count
+            vendor_unit_price:SetText('Vendor Price: ' .. money.to_string(selected_item.unit_vendor_price, nil, nil, aux.color.text.enabled) .. ' / ' .. money.to_string(total_vendor_price, nil, nil, aux.color.text.enabled))
             total_buyout_proceeds:SetText('Max Proceeds: ' .. money.to_string(bo_proceeds, nil, nil, aux.color.text.enabled))
         end
 
